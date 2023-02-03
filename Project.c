@@ -242,10 +242,39 @@ int get_address(char* command,int index){
 }
 
 void createcopy(char* address){
-    char fake_address[N];
+    char fake_address[N]={'\0'};
     strcpy(fake_address,"./temp");
     strncat(fake_address,address+6,strlen(address)-6);
-
+    char current_address[N]={'\0'};
+    strcpy(current_address,fake_address);
+    int i=0;
+    char number[N]={'\0'};
+    sprintf(number,"(%d)",i);
+    strcat(current_address,number);
+    while(file_exists(current_address)){
+        i++;
+        strcpy(current_address,fake_address);
+        sprintf(number,"(%d)",i);
+        strcat(current_address,number);
+    }
+    strcpy(current_address,null);
+    for(int i=0;i<strlen(fake_address);i++){
+        if(fake_address[i]=='/'){
+            mkdir(current_address);
+        }
+        strncat(current_address,fake_address+i,1);
+    }
+    FILE *fp,*fp1;
+    sprintf(number,"(%d)",i);
+    strcat(current_address,number);
+    fp=fopen(current_address,"w");
+    fp1=fopen(address,"r");
+    char s='\0';
+    while((s=fgetc(fp1))!=EOF){
+        fputc(s,fp);
+    }
+    fclose(fp);
+    fclose(fp1);
 }
 
 void createfile(char* command){
@@ -332,6 +361,7 @@ void insertstr(char* command){
                 return;
             }
         }
+        createcopy(address);
         fp=fopen(address,"r");
         findPos(command);
         findWord(command);
@@ -388,6 +418,7 @@ void cat(char* command){
 
 void removestr(char* command){
     if(!exist(command)) return;
+    createcopy(address);
     findAddress(command,1);
     findPos(command);
     long long current_line=1;
@@ -516,7 +547,6 @@ void copystr(char* command){
     fclose(fp);
     fclose(help);
     fclose(clipboard);
-    remove("./help.txt");
 }
 
 void cutstr(char* command){
@@ -526,6 +556,7 @@ void cutstr(char* command){
 
 void pastestr(char* command){
     if(!(exist(command))) return;
+    createcopy(address);
     FILE *fp,*clipboard,*help;
     findAddress(command,1);
     findPos(command);
@@ -836,19 +867,11 @@ void findstr(char* command ,char* word){
     }
     fclose(help);
     fclose(fp);
-    free(just_a_word);
-    free(whole_line);
-    free(search_after);
-    free(search_before);
-    free(beforestar);
-    free(afterstar);
-    free(head);
-    free(tail);
-    free(vajeh);
 }
 
 void replacestr(char* command){
-    if(exist(command)) return;
+    if(!exist(command)) return;
+    createcopy(address);
     char whole_line1[N]={'\0'}; char just_a_word1[N]={'\0'};
     char word2[N]={'\0'};
     char word1[N]={'\0'};
@@ -980,11 +1003,6 @@ void replacestr(char* command){
         updated_word[j]=s;
         j++;
     }
-    strcpy(whole_line,body);
-    strcpy(body,null);
-    strncat(body,whole_line,strlen(whole_line)-2);
-    if(whole_line[strlen(whole_line)-2]!='\n' && whole_line[strlen(whole_line)-2]!=EOF) strncat(body,whole_line+strlen(whole_line)-2,1);
-    if(whole_line[strlen(whole_line)-1]!='\n' && whole_line[strlen(whole_line)-1]!=EOF) strncat(body,whole_line+strlen(whole_line)-1,1);
     int space_counter=0;
     strcpy(just_a_word,null);
     char beforestar[N]={'\0'};
@@ -1136,6 +1154,7 @@ void replacestr(char* command){
                 for(int i=0;i<strlen(javab);i++){
                     fputc(javab[i],fp);
                 }
+                fputc('\n',fp);
                 fclose(fp);
             }
 
@@ -1159,6 +1178,7 @@ void replacestr(char* command){
                     for(int i=0;i<strlen(javab);i++){
                         fputc(javab[i],fp);
                     }
+                    fputs('\n',fp);
                     fclose(fp);
                 }
             }else if(check[1]==1){
@@ -1182,6 +1202,7 @@ void replacestr(char* command){
                     for(int i=0;i<strlen(javab);i++){
                         fputc(javab[i],fp);
                     }
+                    fputc('\n',fp);
                     fclose(fp);
                 }
             }
@@ -1189,25 +1210,12 @@ void replacestr(char* command){
     }
     fclose(help);
     fclose(fp);
-    free(just_a_word);
-    free(whole_line);
-    free(search_after);
-    free(search_before);
-    free(beforestar);
-    free(afterstar);
-    free(head);
-    free(tail);
-    free(vajeh);
-    free(head_updated);
-    free(tail_updated);
-    free(exist_head);
-    free(reverse_head);
 }
 
 void grepstr(char* command){
     findWord(command);
-    char whole_line[N];
-    char just_a_word[N];
+    char whole_line[N]={'\0'};
+    char just_a_word[N]={'\0'};
     strcpy(whole_line,command);
     strcpy(just_a_word,".");
     int checkmode[10]={0};
@@ -1227,18 +1235,21 @@ void grepstr(char* command){
     int file_counter=0;
     strcpy(command,whole_line);
     while(check_if_ended[1]==0){
+        printf("bi");
         t=get_address(command,check_if_ended[0]);
+        printf("namos");
         if(!t) warning=1;
         else{
             fp=fopen(address,"r");
             int check_file=0;
+            printf("%s",address);
             while((s=fgetc(fp))!=EOF){
                 if(s=='\n'){
                     check=0;
                     for(int i=0;i<=strlen(current_line)-strlen(word);i++){
                         check_if=1;
                         for(int j=0;j<strlen(word);j++){
-                            if(current_line[i+j]!=word[j]) {check_if=0; break;}
+                            if(current_line[i+j]!=word[j]) {check_if=0;}
                         }
                         if(check_if) check=1;
                     }
@@ -1247,6 +1258,7 @@ void grepstr(char* command){
                             check_file=1;
                         }else if(checkmode[1]==1){
                             counter++;
+                            printf("s");
                         }else{
                             printf("%s: %s\n",address,current_line);
                         }
@@ -1325,13 +1337,13 @@ void compare(char* command){
             }
         }
         if(current_line==total1+1){
-            printf(">>>>>>>> #%d - #%d >>>>>>>>\n%s",total1+1,total2,line2);
+            printf(">>>>>>>> #%d - #%d >>>>>>>>\n%s\n",total1+1,total2,line2);
         }else if(current_line==total2+1){
-            printf("<<<<<<<< #%d - #%d <<<<<<<<\n%s",total2+1,total1,line1);
+            printf("<<<<<<<< #%d - #%d <<<<<<<<\n%s\n",total2+1,total1,line1);
         }else if(current_line>total1){
-            printf("\n%s",line2);
+            printf("%s\n",line2);
         }else if(current_line>total2){
-            printf("\n%s",line1);
+            printf("%s\n",line1);
         }
         strcpy(line1,null);
         strcpy(line2,null);
@@ -1339,12 +1351,11 @@ void compare(char* command){
     }
     fclose(fp1);
     fclose(fp2);
-    free(line1);
-    free(line2);
 }
 
 void closingpair(char* command){
     if(!(exist(command))) return;
+    createcopy(address);
     findAddress(command,1);
     FILE *fp,*help;
     fp=fopen(address,"r");
@@ -1520,6 +1531,41 @@ void closingpair(char* command){
     fclose(fp);
 }
 
+void undo(char* command){
+    if(!(exist(command))) return;
+    findAddress(command,0);
+    char fake_address[N]={'\0'};
+    strcpy(fake_address,"./temp");
+    strncat(fake_address,address+6,strlen(address)-6);
+    char current_address[N]={'\0'};
+    strcpy(current_address,fake_address);
+    int i=0;
+    char number[N]={'\0'};
+    sprintf(number,"(%d)",i);
+    strcat(current_address,number);
+    while(file_exists(current_address)){
+        i++;
+        strcpy(current_address,fake_address);
+        sprintf(number,"(%d)",i);
+        strcat(current_address,number);
+    }
+    i--;
+    if(i==-1) return;
+    strcpy(current_address,fake_address);
+    sprintf(number,"(%d)",i);
+    strcat(current_address,number);
+    FILE *fp,*fp1;
+    fp=fopen(current_address,"r");
+    fp1=fopen(address,"w");
+    char s='\0';
+    while((s=fgetc(fp))!=EOF){
+        fputc(s,fp1);
+    }
+    fclose(fp);
+    fclose(fp1);
+    remove(current_address);
+}
+
 int main(){
     char command[10000];
     while(1){
@@ -1553,8 +1599,10 @@ int main(){
             compare(command);
         }else if(!(strcmp(tmp,"auto-indent"))){
             closingpair(command);
-        }else if(!(strcmp(tmo,"tree"))){
+        }else if(!(strcmp(tmp,"tree"))){
 
+        }else if(!(strcmp(tmp,"undo"))){
+            undo(command);
         }
     }
 }
