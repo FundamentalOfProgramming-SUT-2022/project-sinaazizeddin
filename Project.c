@@ -3,6 +3,8 @@
 #include <dirent.h>
 #include <errno.h>
 
+
+
 char tmp[1000],tmp1[1000],tmp2[1000],address[1000],null[1000]={'\0'},word[10000];
 char line_string[100];
 char character_string[100];
@@ -1235,42 +1237,38 @@ void grepstr(char* command){
     int file_counter=0;
     strcpy(command,whole_line);
     while(check_if_ended[1]==0){
-        printf("bi");
         t=get_address(command,check_if_ended[0]);
-        printf("namos");
-        if(!t) warning=1;
-        else{
-            fp=fopen(address,"r");
-            int check_file=0;
-            printf("%s",address);
-            while((s=fgetc(fp))!=EOF){
-                if(s=='\n'){
-                    check=0;
-                    for(int i=0;i<=strlen(current_line)-strlen(word);i++){
-                        check_if=1;
-                        for(int j=0;j<strlen(word);j++){
-                            if(current_line[i+j]!=word[j]) {check_if=0;}
-                        }
-                        if(check_if) check=1;
+        fp=fopen(address,"r");
+        int check_file=0;
+        s=fgetc(fp);
+        while(s!=EOF){
+            if(s=='\n'){
+                check=0;
+                int h=strlen(current_line)-strlen(word);
+                for(int k=0;k<=h;k++){
+                    check_if=1;
+                    for(int j=0;j<strlen(word);j++){
+                        if(current_line[k+j]!=word[j]) {check_if=0;}
                     }
-                    if(check){
-                        if(checkmode[0]==1){
-                            check_file=1;
-                        }else if(checkmode[1]==1){
-                            counter++;
-                            printf("s");
-                        }else{
-                            printf("%s: %s\n",address,current_line);
-                        }
-                    }
-                    strcpy(current_line,null);
-                }else{
-                    strncat(current_line,&s,1);
+                    if(check_if) check=1;
                 }
+                if(check){
+                    if(checkmode[0]==1){
+                        check_file=1;
+                    }else if(checkmode[1]==1){
+                        counter++;
+                    }else{
+                        printf("%s: %s\n",address,current_line);
+                    }
+                }
+                strcpy(current_line,null);
+            }else{
+                strncat(current_line,&s,1);
             }
-            if(checkmode[0]==1 && check_file==1) printf("%s\n",address);
-            fclose(fp);
+            s=fgetc(fp);
         }
+        if(checkmode[0]==1 && check_file==1) printf("%s\n",address);
+        fclose(fp);
         file_counter++;
     }
     if(checkmode[1]==1) printf("%d\n",counter);
@@ -1566,9 +1564,40 @@ void undo(char* command){
     remove(current_address);
 }
 
+void tree(char *basePath, const int root, int depth){
+    int i;
+    char path[1000];
+    struct dirent *dp;
+    DIR *dir = opendir(basePath);
+    if (!dir){
+        return;
+    }
+    while ((dp = readdir(dir)) != NULL){
+        if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0){
+            for (i=0; i<root; i++){
+                if (i%2 == 0 || i == 0){
+                    printf("%c", 179);
+                }
+                else{
+                    printf(" ");
+                }
+            }
+            printf("%c%c%s\n", 195, 196, dp->d_name);
+            if((depth==-1)||(depth>=root/2+1)){
+                strcpy(path, basePath);
+                strcat(path, "/");
+                strcat(path, dp->d_name);
+                tree(path, root + 2, depth);
+            }
+        }
+    }
+    closedir(dir);
+}
+
 int main(){
     char command[10000];
     while(1){
+        printf(">>>>>>");
         check_if_ended[0]=0;
         check_if_ended[1]=0;
         scanf("%[^\n]%*c", command);
@@ -1600,7 +1629,19 @@ int main(){
         }else if(!(strcmp(tmp,"auto-indent"))){
             closingpair(command);
         }else if(!(strcmp(tmp,"tree"))){
-
+            sscanf(command,"%s %s",tmp,tmp1);
+            if(tmp1[0]=='-'){
+                strncat(tmp2,tmp1+1,strlen(tmp1)-1);
+            }
+            strcpy(tmp1,tmp2);
+            long long l=string_to_ll(tmp1);
+            strcpy(tmp1,null);
+            strcpy(tmp2,null);
+            if(l<=-2){
+                printf("Invalid depth\n");
+            }else{
+                tree("./root",0,l);
+            }
         }else if(!(strcmp(tmp,"undo"))){
             undo(command);
         }
