@@ -1210,8 +1210,6 @@ void replacestr(char* command){
             }
         }
     }
-    fclose(help);
-    fclose(fp);
 }
 
 void grepstr(char* command){
@@ -1635,6 +1633,7 @@ int main(){
             }
             strcpy(tmp1,tmp2);
             long long l=string_to_ll(tmp1);
+            int depth=(int) (-l);
             strcpy(tmp1,null);
             strcpy(tmp2,null);
             if(l<=-2){
